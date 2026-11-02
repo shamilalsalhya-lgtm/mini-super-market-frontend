@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import ApiClient from '../api/client';
 import { useAuth } from './AuthContext';
 
@@ -35,6 +35,7 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const toastTimerRef = useRef(null);
 
   // Fetch user cart from DB when logged in, or use localStorage for guest
   const fetchCart = async () => {
@@ -71,8 +72,12 @@ export const CartProvider = ({ children }) => {
   }, [isAuthenticated, user?._id]);
 
   const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 2500);
+    const payload = typeof msg === 'string'
+      ? { type: 'success', title: msg }
+      : msg;
+    setToastMessage(payload);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastMessage(null), 3500);
   };
 
   // Add Item to Cart (Verifies authentication & calls POST /user/cart/items API)
@@ -297,6 +302,7 @@ export const CartProvider = ({ children }) => {
         cartOpen,
         setCartOpen,
         toastMessage,
+        showToast,
         addToCart,
         updateQuantity,
         removeFromCart,

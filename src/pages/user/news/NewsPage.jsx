@@ -71,7 +71,7 @@ export const NewsPage = ({ onNavigate }) => {
     <div className="w-full bg-[#FAFAFA] font-sans selection:bg-[#FF7622]/20">
       
       {/* Header */}
-      <div className="bg-white border-b border-slate-200/80 py-8 px-6 sm:px-8">
+      <div className="scroll-section bg-white border-b border-slate-200/80 py-8 px-6 sm:px-8">
         <div className="max-w-7xl mx-auto space-y-2">
           <div className="flex items-center space-x-2 text-xs text-slate-400 font-bold">
             <span onClick={() => onNavigate?.('home')} className="hover:text-[#FF7622] cursor-pointer">Home</span>
@@ -87,7 +87,7 @@ export const NewsPage = ({ onNavigate }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 py-12">
+      <div className="scroll-section max-w-7xl mx-auto px-6 sm:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {articles.map((item) => (
             <div

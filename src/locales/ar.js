@@ -18,7 +18,7 @@ export default {
 
   // Hero Section
   heroTag: 'تأسست 1991 · الكويت',
-  heroTitle1: 'طعم البيت',
+  heroTitle1: 'كل قضمة مميزة',
   heroTitle2: '',
   heroDesc: 'وجبات خفيفة مخبوزة فاخرة مصنوعة بتقاليد أصيلة. تُوصل طازجة في جميع أنحاء الكويت.',
   browseCategories: 'استكشف المنتجات',

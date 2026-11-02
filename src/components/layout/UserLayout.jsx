@@ -27,6 +27,7 @@ import {
   Layers
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 import ApiClient from '../../api/client';
 import { LANGUAGES, getTranslation, setAppLanguage, getAppLanguage } from '../../locales';
@@ -34,6 +35,10 @@ import { Footer } from './Footer';
 
 export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, children }) => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { toastMessage } = useCart();
+  const toast = typeof toastMessage === 'string'
+    ? { type: 'success', title: toastMessage }
+    : toastMessage;
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -481,7 +486,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
           3. MAIN CONTENT
           Exact same responsive web layout rendered everywhere
          ============================================================= */}
-      <main className="flex-1 w-full pb-20 md:pb-0">
+      <main className="storefront flex-1 w-full pb-20 md:pb-0">
         {children}
       </main>
 
@@ -551,6 +556,19 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
           })}
         </div>
       </nav>
+
+      {toast && (
+        <div className="fixed top-20 right-4 sm:right-6 z-[70] w-[min(20rem,calc(100vw-2rem))] animate-in slide-in-from-top-2 fade-in duration-200">
+          <Alert
+            variant={toast.type === 'error' ? 'destructive' : 'success'}
+            className={`bg-white shadow-2xl ${toast.type === 'error' ? 'border-rose-200' : 'border-emerald-200'}`}
+          >
+            {toast.type === 'error' ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+            <AlertTitle>{toast.title}</AlertTitle>
+            {toast.description ? <AlertDescription>{toast.description}</AlertDescription> : null}
+          </Alert>
+        </div>
+      )}
 
     </div>
   );

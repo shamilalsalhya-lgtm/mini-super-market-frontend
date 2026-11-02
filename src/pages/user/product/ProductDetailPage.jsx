@@ -246,7 +246,7 @@ export const ProductDetailPage = ({ productId = 'prod-chk-2', onNavigate }) => {
         {/* =============================================================
             2 & 3. CLEAN PRODUCT SHOWCASE & INFORMATION (Desktop 2-Col Split)
            ============================================================= */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 items-start">
+        <div className="scroll-section grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 items-start">
           
           {/* LEFT: Product Image Showcase & 3-Angle Gallery (md:col-span-7) */}
           <div className="md:col-span-7 bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
@@ -335,7 +335,7 @@ export const ProductDetailPage = ({ productId = 'prod-chk-2', onNavigate }) => {
             4. RECOMMENDED PRODUCTS (Clean Grid matching Home Card style)
            ============================================================= */}
         {recommendedProducts.length > 0 && (
-          <div className="pt-4 text-left space-y-3">
+          <div className="scroll-section pt-4 text-left space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm sm:text-base font-bold text-slate-900">
                 Recommended Products
@@ -435,7 +435,7 @@ export const ProductDetailPage = ({ productId = 'prod-chk-2', onNavigate }) => {
             5. RELATED PRODUCTS (Same Category Grid)
            ============================================================= */}
         {sameCategoryProducts.length > 0 && (
-          <div className="pt-4 text-left space-y-3">
+          <div className="scroll-section pt-4 text-left space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm sm:text-base font-bold text-slate-900">
                 Related Products

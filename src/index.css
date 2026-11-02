@@ -34,6 +34,10 @@
   letter-spacing: -0.025em;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -41,6 +45,26 @@ body {
   color: #0e1d4a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Each storefront section rises in as it enters the viewport */
+@keyframes section-rise {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+main.storefront section:not(.sticky),
+main.storefront .scroll-section,
+footer.storefront-footer {
+  animation: section-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 42%;
 }
 
 /* Theme Panels & Cards matching the Al Salhiya brand aesthetic */
@@ -261,6 +285,18 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  main.storefront section:not(.sticky),
+  main.storefront .scroll-section,
+  footer.storefront-footer {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   .animate-hero-fade-up,
   .animate-hero-fade-up-delay-1,
   .animate-hero-fade-up-delay-2,

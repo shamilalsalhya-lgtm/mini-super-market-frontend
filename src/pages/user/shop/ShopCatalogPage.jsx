@@ -222,7 +222,7 @@ export const ShopCatalogPage = ({ onNavigate }) => {
     <div className="w-full bg-[#FAFAFA] font-sans selection:bg-[#FF7622]/20 min-h-screen">
       
       {/* Breadcrumb Header */}
-      <div className="bg-white border-b border-slate-200/80 py-6 px-4 sm:px-8">
+      <div className="scroll-section bg-white border-b border-slate-200/80 py-6 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2 text-xs text-slate-400 font-bold mb-1">
@@ -252,7 +252,7 @@ export const ShopCatalogPage = ({ onNavigate }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <div className="scroll-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         
         {/* Mobile Horizontal Category Tabs (< lg) */}
         <div className="lg:hidden mb-6">

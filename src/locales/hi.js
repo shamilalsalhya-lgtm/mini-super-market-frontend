@@ -18,7 +18,7 @@ export default {
 
   // Hero Section
   heroTag: 'स्था. 1991 · कुवैत',
-  heroTitle1: 'घर का स्वाद',
+  heroTitle1: 'हर निवाला खास है',
   heroTitle2: '',
   heroDesc: 'परंपरा के साथ बने प्रीमियम बेक्ड स्नैक्स। पूरे कुवैत में ताज़ा डिलीवरी।',
   browseCategories: 'उत्पाद देखें',

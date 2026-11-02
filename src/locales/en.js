@@ -18,7 +18,7 @@ export default {
 
   // Hero Section
   heroTag: 'Est. 1991 · Kuwait',
-  heroTitle1: 'Taste of Home',
+  heroTitle1: 'Every bite is a special',
   heroTitle2: '',
   heroDesc: 'Premium baked snacks crafted with tradition. Delivered fresh all over Kuwait.',
   browseCategories: 'Explore Products',

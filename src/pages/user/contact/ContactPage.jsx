@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, ChevronDown } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, ChevronDown, Instagram } from 'lucide-react';
 import { usePlatform } from '../../../context/PlatformContext';
+import { useCart } from '../../../context/CartContext';
+
+const WHATSAPP_MESSAGE = 'Hello Al Salhiya, I would like to know more about your products.';
+const WHATSAPP_URL = `https://wa.me/96597953527?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+
+const WhatsAppIcon = ({ className }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <path d="M20.52 3.48A11.86 11.86 0 0 0 12.06 0C5.5 0 .16 5.33.16 11.89c0 2.1.55 4.15 1.6 5.96L0 24l6.3-1.65a11.9 11.9 0 0 0 5.76 1.47h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.16-3.45-8.44ZM12.07 21.3h-.01a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.74.98 1-3.64-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.89 9.9-9.89 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.88 9.88Zm5.42-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.64-2.04-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35Z" />
+  </svg>
+);
 
 export const ContactPage = ({ onNavigate }) => {
   const { appearance } = usePlatform();
+  const { showToast } = useCart();
   const brandName = appearance?.platformName || 'Alfaysal Bakery';
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setForm({ name: '', email: '', phone: '', subject: '', message: '' });
-    }, 4000);
+    setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+    showToast({
+      type: 'success',
+      title: 'Message Received!',
+      description: 'Thank you. Our B2B team will contact you shortly.',
+    });
   };
 
   const faqs = [
@@ -41,7 +52,7 @@ export const ContactPage = ({ onNavigate }) => {
     <div className="w-full bg-[#FAFAFA] font-sans selection:bg-[#FF7622]/20">
       
       {/* Header */}
-      <div className="bg-[#FFF9F5] border-b border-orange-100/60 py-12 px-6 text-center space-y-2">
+      <div className="scroll-section bg-[#FFF9F5] border-b border-orange-100/60 py-12 px-6 text-center space-y-2">
         <span className="text-xs font-black uppercase tracking-widest text-[#FF7622]">
           Get in Touch
         </span>
@@ -56,7 +67,7 @@ export const ContactPage = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto px-6 sm:px-8 py-12 space-y-12">
         
         {/* Contact Info Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="scroll-section grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2.5 text-left">
             <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF7622] flex items-center justify-center">
               <MapPin className="w-5 h-5" />
@@ -74,9 +85,17 @@ export const ContactPage = ({ onNavigate }) => {
             </div>
             <h4 className="font-extrabold text-sm text-[#1F2229]">Sales Hotline</h4>
             <p className="text-xs text-slate-500 leading-relaxed">
-              <a href="tel:+96524739900" className="hover:text-[#FF7622]">+965 24739900</a>
+              <a href="tel:+96597953527" className="hover:text-[#FF7622]">+965 9795 3527</a>
               <br />
-              B2B &amp; wholesale partners
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 hover:text-[#FF7622]"
+              >
+                <WhatsAppIcon className="w-3.5 h-3.5" />
+                WhatsApp
+              </a>
             </p>
           </div>
 
@@ -86,11 +105,19 @@ export const ContactPage = ({ onNavigate }) => {
             </div>
             <h4 className="font-extrabold text-sm text-[#1F2229]">Email Inquiries</h4>
             <p className="text-xs text-slate-500 leading-relaxed">
-              <a href="mailto:info@alfaysalgroup.com" className="hover:text-[#FF7622]">
-                info@alfaysalgroup.com
+              <a href="mailto:Mubarkiya075@gmail.com" className="hover:text-[#FF7622]">
+                Mubarkiya075@gmail.com
               </a>
               <br />
-              Partnership &amp; catalog requests
+              <a
+                href="https://www.instagram.com/al_salhiyaproducts"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 hover:text-[#FF7622]"
+              >
+                <Instagram className="w-3.5 h-3.5" />
+                @al_salhiyaproducts
+              </a>
             </p>
           </div>
 
@@ -107,7 +134,7 @@ export const ContactPage = ({ onNavigate }) => {
         </div>
 
         {/* Form and FAQ 2-Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="scroll-section grid grid-cols-1 lg:grid-cols-2 gap-10">
           
           {/* Contact Form */}
           <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 text-left">
@@ -116,16 +143,7 @@ export const ContactPage = ({ onNavigate }) => {
               <p className="text-xs text-slate-500 mt-0.5">For supermarket buyers and retail partners.</p>
             </div>
 
-            {submitted ? (
-              <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                <h4 className="font-bold text-sm text-emerald-800">Message Received!</h4>
-                <p className="text-xs text-emerald-600">
-                  Thank you. Our B2B team will contact you shortly.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4 text-xs font-bold">
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs font-bold">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-slate-600">YOUR NAME</label>
@@ -196,8 +214,7 @@ export const ContactPage = ({ onNavigate }) => {
                   <Send className="w-4 h-4" />
                   <span>Send Inquiry</span>
                 </button>
-              </form>
-            )}
+            </form>
           </div>
 
           {/* FAQ Accordion */}
