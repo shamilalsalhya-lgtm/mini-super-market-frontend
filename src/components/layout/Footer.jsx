@@ -8,7 +8,7 @@ import {
 import { usePlatform } from '../../context/PlatformContext';
 import ApiClient from '../../api/client';
 
-const WHATSAPP_MESSAGE = 'Hello Al Salhiya, I would like to know more about your products.';
+const WHATSAPP_MESSAGE = 'مرحباً الصالحية، أود معرفة المزيد عن منتجاتكم.';
 const WHATSAPP_URL = `https://wa.me/96597953527?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
 const WhatsAppIcon = ({ className }) => (
