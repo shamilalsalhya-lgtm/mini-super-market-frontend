@@ -3,7 +3,6 @@ import {
   Search,
   MapPin,
   Star,
-  Clock,
   ShieldCheck,
   Grid,
   Sparkles,
@@ -258,14 +257,14 @@ export const MobileStorefront = ({ onNavigate }) => {
         setProducts(Array.isArray(prodList) ? prodList : []);
       }
       if (offerRes.status === 'fulfilled') {
+        // The database is the source of truth: an empty list means "no offers"
         const offerList = Array.isArray(offerRes.value?.data) ? offerRes.value.data : (offerRes.value?.data?.offers || []);
-        if (Array.isArray(offerList) && offerList.length > 0) {
-          setDashboardOffers(offerList);
-          try {
-            localStorage.setItem('app_offers', JSON.stringify(offerList));
-          } catch (_) {}
-        }
+        setDashboardOffers(Array.isArray(offerList) ? offerList : []);
       }
+      // Clear offers cached by older versions so deleted deals stop appearing
+      try {
+        localStorage.removeItem('app_offers');
+      } catch (_) {}
 
       setIsLoading(false);
     }).catch(() => {
@@ -275,38 +274,10 @@ export const MobileStorefront = ({ onNavigate }) => {
     return () => { isMounted = false; };
   }, []);
 
-  // Dynamic Dashboard Offers sync (Storefront Carousel)
-  const [dashboardOffers, setDashboardOffers] = useState(() => {
-    try {
-      const stored = localStorage.getItem('app_offers');
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    return [];
-  });
+  // Active offers from the database (Storefront Carousel)
+  const [dashboardOffers, setDashboardOffers] = useState([]);
 
-  useEffect(() => {
-    const loadOffers = () => {
-      try {
-        const stored = localStorage.getItem('app_offers');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setDashboardOffers(parsed);
-          }
-        }
-      } catch (_) {}
-    };
-
-    loadOffers();
-    window.addEventListener('app_offers_updated', loadOffers);
-    window.addEventListener('storage', loadOffers);
-    return () => {
-      window.removeEventListener('app_offers_updated', loadOffers);
-      window.removeEventListener('storage', loadOffers);
-    };
-  }, []);
-
-  // Best offer items for Carousel (reads dashboard offers dynamically, fallbacks to product deals)
+  // Carousel items: active offers from the database, otherwise the latest products
   const bestOfferProducts = useMemo(() => {
     const activeDashboardOffers = (dashboardOffers || []).filter((o) => o.isActive !== false);
     if (activeDashboardOffers.length > 0) {
@@ -326,9 +297,11 @@ export const MobileStorefront = ({ onNavigate }) => {
       }));
     }
 
-    const flagged = products.filter(p => p.isBestOffer);
-    if (flagged.length > 0) return flagged;
-    return products.slice(0, 3);
+    return [...products]
+      .filter((p) => p.isActive !== false)
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5)
+      .map((p) => ({ ...p, tagBadge: p.tagBadge || '✨ New Arrival' }));
   }, [dashboardOffers, products]);
 
   // Carousel auto-play (smoothly transitions deals every 4s, pauses on touch/drag/hover)
@@ -420,6 +393,15 @@ export const MobileStorefront = ({ onNavigate }) => {
       setIsPaused(false);
     }, 2000);
   };
+
+  // With a single category, hide "All" and keep that category selected by default
+  const singleCategoryId = categories.length === 1 ? categories[0]._id : null;
+  const defaultCategoryId = singleCategoryId || 'ALL';
+  useEffect(() => {
+    if (singleCategoryId && selectedCategoryId === 'ALL') {
+      setSelectedCategoryId(singleCategoryId);
+    }
+  }, [singleCategoryId, selectedCategoryId]);
 
   // Subcategories belonging to active category
   const activeSubcategories = useMemo(() => {
@@ -536,7 +518,7 @@ export const MobileStorefront = ({ onNavigate }) => {
 
   // Handle Category Click: selects category instantly, triggers bounce animation, and smoothly scrolls category bar to stand at top
   const handleSelectCategory = (catId) => {
-    const nextCatId = selectedCategoryId === catId ? 'ALL' : catId;
+    const nextCatId = selectedCategoryId === catId ? defaultCategoryId : catId;
     setSelectedCategoryId(nextCatId);
     setSelectedSubcategoryId('ALL');
     setAnimatingCatId(catId);
@@ -710,7 +692,7 @@ export const MobileStorefront = ({ onNavigate }) => {
          ============================================================= */}
       <section className="px-4 mt-3.5">
         <div className="bg-white rounded-2xl border border-slate-100 px-2 py-3 shadow-2xs">
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-3 gap-1">
             {[
               {
                 icon: Award,
@@ -718,13 +700,6 @@ export const MobileStorefront = ({ onNavigate }) => {
                 color: 'text-[#18308c]',
                 bg: 'bg-[#18308c]/8',
                 delay: '0ms',
-              },
-              {
-                icon: Clock,
-                label: '8–11 PM',
-                color: 'text-[#FF7622]',
-                bg: 'bg-orange-50',
-                delay: '70ms',
               },
               {
                 icon: Truck,
@@ -840,10 +815,12 @@ export const MobileStorefront = ({ onNavigate }) => {
                         </p>
 
                         <div className="mt-2.5 flex items-center space-x-2">
-                          <span className="text-base font-black text-white">
-                            ₹{prod?.offerPrice !== undefined ? prod.offerPrice : (prod?.price || '99')}
-                          </span>
-                          {(prod?.actualPrice || prod?.mrp) > (prod?.offerPrice || prod?.price) && (
+                          {Number(prod?.offerPrice ?? prod?.price) > 0 && (
+                            <span className="text-base font-black text-white">
+                              ₹{prod?.offerPrice ?? prod?.price}
+                            </span>
+                          )}
+                          {Number(prod?.offerPrice ?? prod?.price) > 0 && (prod?.actualPrice || prod?.mrp) > (prod?.offerPrice ?? prod?.price) && (
                             <span className="text-xs text-white/70 line-through">
                               ₹{prod?.actualPrice || prod?.mrp}
                             </span>
@@ -945,7 +922,8 @@ export const MobileStorefront = ({ onNavigate }) => {
           ref={circularCategoryScrollRef}
           className="flex items-start space-x-2.5 overflow-x-auto no-scrollbar py-1"
         >
-          {/* 'All Items' Circular Button */}
+          {/* 'All Items' Circular Button (hidden when there is only one category) */}
+          {!singleCategoryId && (
           <button
             data-category-id="ALL"
             onClick={() => handleSelectCategory('ALL')}
@@ -971,6 +949,7 @@ export const MobileStorefront = ({ onNavigate }) => {
               )}
             </div>
           </button>
+          )}
 
           {/* Dynamic DB Categories with Clean Single Border */}
           {categories.map((cat) => {
@@ -1038,10 +1017,10 @@ export const MobileStorefront = ({ onNavigate }) => {
             </span>
           </div>
 
-          {(selectedCategoryId !== 'ALL' || selectedSubcategoryId !== 'ALL' || searchQuery || activeTabFilter !== 'ALL') && (
+          {(selectedCategoryId !== defaultCategoryId || selectedSubcategoryId !== 'ALL' || searchQuery || activeTabFilter !== 'ALL') && (
             <button
               onClick={() => {
-                setSelectedCategoryId('ALL');
+                setSelectedCategoryId(defaultCategoryId);
                 setSelectedSubcategoryId('ALL');
                 setSelectedBrand('ALL');
                 setSearchQuery('');

@@ -64,7 +64,7 @@ export const ProductDetailPage = ({ productId = 'prod-chk-2', onNavigate }) => {
             weight: dbItem.unit ? `1 ${dbItem.unit}` : '1 Kg',
             origin: dbItem.origin || 'Farm Fresh Daily Harvest',
             image: dbItem.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80',
-            gallery: dbItem.gallery?.length ? dbItem.gallery : [dbItem.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80'],
+            gallery: dbItem.images?.length ? dbItem.images : [],
             description: dbItem.description || 'Fresh, high-grade produce carefully inspected and stocked daily at Al Salhiya Supermarket.',
           };
 
@@ -139,35 +139,10 @@ export const ProductDetailPage = ({ productId = 'prod-chk-2', onNavigate }) => {
     };
   }, [productId]);
 
-  // Multi-angle gallery images (always provides 3 preview photos)
+  // Gallery shows only the product's own images (thumbnails hidden when there is just one)
   const galleryImages = useMemo(() => {
     if (!product) return [];
-    if (product.gallery && product.gallery.length >= 3) {
-      return product.gallery.slice(0, 3);
-    }
-    const main = product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80';
-    if (product.gallery && product.gallery.length === 2) {
-      return [product.gallery[0], product.gallery[1], main];
-    }
-    const cat = (product.categoryLabel || product.category || '').toLowerCase();
-    let alt1 = main;
-    let alt2 = main;
-
-    if (cat.includes('fruit') || cat.includes('veg') || cat.includes('orange') || cat.includes('apple') || cat.includes('produce') || cat.includes('broccoli')) {
-      alt1 = 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=500&auto=format&fit=crop&q=80';
-      alt2 = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&auto=format&fit=crop&q=80';
-    } else if (cat.includes('dairy') || cat.includes('milk') || cat.includes('egg') || cat.includes('cheese')) {
-      alt1 = 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&auto=format&fit=crop&q=80';
-      alt2 = 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&auto=format&fit=crop&q=80';
-    } else if (cat.includes('meat') || cat.includes('chicken') || cat.includes('poultry') || cat.includes('beef')) {
-      alt1 = 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&auto=format&fit=crop&q=80';
-      alt2 = 'https://images.unsplash.com/photo-1551028150-64b9f398f678?w=500&auto=format&fit=crop&q=80';
-    } else {
-      alt1 = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80';
-      alt2 = 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=80';
-    }
-
-    return [main, alt1, alt2];
+    return [...new Set([product.image, ...(product.gallery || [])].filter(Boolean))];
   }, [product]);
 
   const handleShare = () => {
@@ -302,8 +277,8 @@ export const ProductDetailPage = ({ productId = 'prod-chk-2', onNavigate }) => {
               {cleanProductName(product.name)}
             </h1>
 
-            {/* Price Row */}
-            <div className="flex items-baseline gap-2.5">
+            {/* Price Row (hidden on mobile) */}
+            <div className="hidden md:flex items-baseline gap-2.5">
               <span className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
                 ₹{Number(product.price).toFixed(2)}
               </span>
@@ -404,7 +379,7 @@ export const ProductDetailPage = ({ productId = 'prod-chk-2', onNavigate }) => {
 
                   {/* Bottom Row: Price & Details Action */}
                   <div className="pt-2 border-t border-slate-100 mt-2 flex items-center justify-between gap-1.5">
-                    <div className="min-w-0 flex-1">
+                    <div className="hidden md:block min-w-0 flex-1">
                       <span className="text-xs sm:text-sm font-bold text-[#18308C] leading-none block truncate">
                         {item.price ? `₹${Number(item.price).toFixed(2)}` : 'In Store'}
                       </span>
@@ -504,7 +479,7 @@ export const ProductDetailPage = ({ productId = 'prod-chk-2', onNavigate }) => {
 
                   {/* Bottom Row: Price & Details Action */}
                   <div className="pt-2 border-t border-slate-100 mt-2 flex items-center justify-between gap-1.5">
-                    <div className="min-w-0 flex-1">
+                    <div className="hidden md:block min-w-0 flex-1">
                       <span className="text-xs sm:text-sm font-bold text-[#18308C] leading-none block truncate">
                         {item.price ? `₹${Number(item.price).toFixed(2)}` : 'In Store'}
                       </span>

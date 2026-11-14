@@ -26,53 +26,6 @@ import ApiClient from '../../../api/client';
 import { ConfirmDialog } from '../../../components/common/Modal';
 import { compressImage } from '../../../utils/imageCompressor';
 
-const DEFAULT_OFFERS = [
-  {
-    _id: 'offer-1',
-    title: 'Fresh Farm Apples',
-    description: 'Crisp organic Kashmiri red apples, handpicked farm fresh',
-    actualPrice: 120,
-    offerPrice: 69,
-    image: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=500&auto=format&fit=crop&q=80',
-    tagBadge: '⭐ Deal of the Day',
-    isActive: true,
-    order: 1,
-  },
-  {
-    _id: 'offer-2',
-    title: 'Tender Fresh Poultry',
-    description: 'Antibiotic-free fresh whole chicken cuts, cleaned & packed',
-    actualPrice: 220,
-    offerPrice: 159,
-    image: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=500&auto=format&fit=crop&q=80',
-    tagBadge: '⚡ Flash Sale -28%',
-    isActive: true,
-    order: 2,
-  },
-  {
-    _id: 'offer-3',
-    title: 'Pure Desi Cow Ghee',
-    description: 'Traditional bilona churned pure cow ghee in glass jar',
-    actualPrice: 480,
-    offerPrice: 349,
-    image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&auto=format&fit=crop&q=80',
-    tagBadge: '🔥 Save ₹131 Today',
-    isActive: true,
-    order: 3,
-  },
-  {
-    _id: 'offer-4',
-    title: 'Fresh Marine Sardines',
-    description: 'Daily coastal ocean catch, cleaned and gutted for cooking',
-    actualPrice: 180,
-    offerPrice: 119,
-    image: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=500&auto=format&fit=crop&q=80',
-    tagBadge: '🐟 Ocean Catch -34%',
-    isActive: true,
-    order: 4,
-  },
-];
-
 const PRESET_DEAL_IMAGES = [
   { name: 'Apples & Fruits', url: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=500&auto=format&fit=crop&q=80' },
   { name: 'Fresh Poultry', url: 'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=500&auto=format&fit=crop&q=80' },
@@ -104,51 +57,28 @@ export const OffersList = () => {
   const [formSuccess, setFormSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Fetch Offers (localStorage + API fallback)
+  // 1. Fetch Offers (database is the only source of truth)
   const fetchOffers = async () => {
     setIsLoading(true);
     try {
-      let loaded = null;
-      try {
-        const res = await ApiClient.get('/admin/offers').catch(() => ApiClient.get('/offers'));
-        if (res?.success && res.data) {
-          loaded = Array.isArray(res.data) ? res.data : (res.data?.offers || []);
-        }
-      } catch (_) {}
-
-      if (!loaded || loaded.length === 0) {
-        const stored = localStorage.getItem('app_offers');
-        if (stored) {
-          try {
-            loaded = JSON.parse(stored);
-          } catch (_) {}
-        }
-      }
-
-      if (!loaded || loaded.length === 0) {
-        loaded = DEFAULT_OFFERS;
-        localStorage.setItem('app_offers', JSON.stringify(DEFAULT_OFFERS));
-      }
-
+      const res = await ApiClient.get('/admin/offers');
+      const loaded = Array.isArray(res?.data) ? res.data : (res?.data?.offers || []);
       setOffers(loaded);
     } catch (err) {
       console.error('Failed to load offers:', err);
-      setOffers(DEFAULT_OFFERS);
+      setOffers([]);
     } finally {
       setIsLoading(false);
     }
+    // Remove offers cached in the browser by older versions of this page
+    try {
+      localStorage.removeItem('app_offers');
+    } catch (_) {}
   };
 
   useEffect(() => {
     fetchOffers();
   }, []);
-
-  // Save changes to localStorage and dispatch event for immediate dynamic sync
-  const persistOffers = (newList) => {
-    setOffers(newList);
-    localStorage.setItem('app_offers', JSON.stringify(newList));
-    window.dispatchEvent(new Event('app_offers_updated'));
-  };
 
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
@@ -243,28 +173,13 @@ export const OffersList = () => {
         isActive: Boolean(formData.isActive),
       };
 
-      // Try backend call gracefully
-      try {
-        if (pageMode === 'add') {
-          await ApiClient.post('/admin/offers', payload).catch(() => {});
-        } else {
-          await ApiClient.patch(`/admin/offers/${selectedOffer._id}`, payload).catch(() => {});
-        }
-      } catch (_) {}
-
-      let updatedList = [];
       if (pageMode === 'add') {
-        const newItem = {
-          ...payload,
-          _id: `offer-${Date.now()}`,
-          order: offers.length + 1,
-        };
-        updatedList = [newItem, ...offers];
+        await ApiClient.post('/admin/offers', payload);
       } else {
-        updatedList = offers.map((o) => (o._id === selectedOffer._id ? { ...o, ...payload } : o));
+        await ApiClient.patch(`/admin/offers/${selectedOffer._id}`, payload);
       }
 
-      persistOffers(updatedList);
+      await fetchOffers();
       setFormSuccess(pageMode === 'add' ? 'Offer banner created and active on storefront!' : 'Offer updated successfully!');
 
       setTimeout(() => {
@@ -278,17 +193,26 @@ export const OffersList = () => {
   };
 
   // Toggle Active
-  const handleToggleActive = (item) => {
-    const updated = offers.map((o) => (o._id === item._id ? { ...o, isActive: !o.isActive } : o));
-    persistOffers(updated);
+  const handleToggleActive = async (item) => {
+    try {
+      await ApiClient.patch(`/admin/offers/${item._id}`, { isActive: !item.isActive });
+      await fetchOffers();
+    } catch (err) {
+      alert(err.message || 'Failed to update offer.');
+    }
   };
 
   // Delete Offer
-  const handleDeleteOffer = () => {
+  const handleDeleteOffer = async () => {
     if (!deleteTarget) return;
-    const updated = offers.filter((o) => o._id !== deleteTarget._id);
-    persistOffers(updated);
-    setDeleteTarget(null);
+    try {
+      await ApiClient.delete(`/admin/offers/${deleteTarget._id}`);
+      await fetchOffers();
+    } catch (err) {
+      alert(err.message || 'Failed to delete offer.');
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   // Calculate discount percentage
