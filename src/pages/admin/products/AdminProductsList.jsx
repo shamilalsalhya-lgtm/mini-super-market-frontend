@@ -397,18 +397,13 @@ export const AdminProductsList = ({ onNavigate }) => {
       setFormError('Please select a Category.');
       return;
     }
-    if (!formData.subcategoryId) {
-      setFormError('Please select a Subcategory.');
-      return;
-    }
-
-    // Validate images: Minimum 2 required, Maximum 3 allowed
+    // Validate images: Minimum 1 required, Maximum 3 allowed
     const validImages = Array.isArray(formData.images)
       ? formData.images.map(img => (img || '').trim()).filter(Boolean)
       : (formData.image ? [formData.image.trim()] : []);
 
-    if (validImages.length < 2) {
-      setFormError('At least 2 product images are required (Image 1 & Image 2). Maximum 3 images allowed.');
+    if (validImages.length < 1) {
+      setFormError('Please add at least 1 product image. Maximum 3 images allowed.');
       return;
     }
 
@@ -513,12 +508,13 @@ export const AdminProductsList = ({ onNavigate }) => {
     }
   };
 
-  // Get allowed units for the active product's subcategory
+  // Units available for variants: the subcategory's allowed units if it has any, otherwise all active units
   const activeSubcategoryAllowedUnits = useMemo(() => {
     if (!variantModalProduct) return [];
+    const allActiveUnits = units.filter((u) => u.isActive);
     const subcatId = variantModalProduct.subcategoryId?._id || variantModalProduct.subcategoryId;
     const sub = subcategories.find((s) => s._id === subcatId);
-    if (!sub) return [];
+    if (!sub || !(sub.allowedUnitIds || []).length) return allActiveUnits;
 
     // sub.allowedUnitIds contains array of Unit objects or ObjectIds
     const allowedIds = (sub.allowedUnitIds || []).map((u) => (typeof u === 'object' ? u._id : u));
@@ -650,8 +646,8 @@ export const AdminProductsList = ({ onNavigate }) => {
             </h1>
             <p className="text-white/80 text-xs mt-1">
               {pageMode === 'add'
-                ? 'Step 1: Choose Category → Step 2: Choose Subcategory → Step 3: Enter Product Details.'
-                : 'Update Category, Subcategory, Brand, and specifications for this product.'}
+                ? 'Step 1: Choose Category → Step 2: Enter Product Details.'
+                : 'Update the category and details for this product.'}
             </p>
           </div>
           <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-white shrink-0 border border-white/30 backdrop-blur-md">
@@ -679,10 +675,10 @@ export const AdminProductsList = ({ onNavigate }) => {
           <div>
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
               <Layers className="w-4 h-4 text-[#6030ea]" />
-              <span>1. Category, Subcategory & Brand Selection</span>
+              <span>1. Category</span>
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Category Dropdown */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
@@ -702,74 +698,7 @@ export const AdminProductsList = ({ onNavigate }) => {
                 </select>
               </div>
 
-              {/* Subcategory Dropdown (Dependent) */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Subcategory <span className="text-rose-500">*</span>
-                </label>
-                <select
-                  value={formData.subcategoryId}
-                  onChange={(e) => setFormData({ ...formData, subcategoryId: e.target.value })}
-                  disabled={!formData.categoryId}
-                  className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6030ea]/20 focus:border-[#6030ea] font-medium disabled:opacity-50"
-                >
-                  <option value="">
-                    {formData.categoryId ? '-- Select Subcategory --' : '-- First Select Category --'}
-                  </option>
-                  {formSubcategories.map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Brand Dropdown (Independent Master) */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Brand <span className="text-gray-400 font-normal">(Optional)</span>
-                </label>
-                <select
-                  value={formData.brandId}
-                  onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
-                  className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6030ea]/20 focus:border-[#6030ea] font-medium"
-                >
-                  <option value="">-- No Specific Brand / Generic --</option>
-                  {brands.map((b) => (
-                    <option key={b._id} value={b._id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
-
-            {/* Allowed Units Preview Banner for Subcategory */}
-            {activeSubcat && (
-              <div className="mt-3 p-3.5 rounded-2xl bg-purple-50 border border-purple-200/60 flex items-center justify-between text-xs text-purple-900">
-                <div className="flex items-center space-x-2">
-                  <Scale className="w-4 h-4 text-[#6030ea] shrink-0" />
-                  <span>
-                    Allowed Units for <strong>{activeSubcat.name}</strong>:{' '}
-                  </span>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {subcatAllowedUnitObjects.length > 0 ? (
-                      subcatAllowedUnitObjects.map((u) => (
-                        <span
-                          key={u._id}
-                          className="px-2 py-0.5 rounded-md bg-white text-[#6030ea] font-bold border border-purple-200 shadow-2xs"
-                        >
-                          {u.name} ({u.symbol})
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-rose-600 font-bold">None configured. Please add allowed units in Categories.</span>
-                    )}
-                  </div>
-                </div>
-                <span className="text-[11px] text-purple-600 font-medium">Variants can only use these units</span>
-              </div>
-            )}
           </div>
 
           <hr className="border-gray-100" />
@@ -810,16 +739,16 @@ export const AdminProductsList = ({ onNavigate }) => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-gray-700">
-                    Product Photography <span className="text-rose-500">* (Min 2, Max 3 Images)</span>
+                    Product Photography <span className="text-rose-500">* (Min 1, Max 3 Images)</span>
                   </label>
                   <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-2.5 py-0.5 rounded-md border border-purple-100">
-                    {(formData.images || []).filter(img => (img || '').trim()).length} of 3 uploaded (Min 2 Required)
+                    {(formData.images || []).filter(img => (img || '').trim()).length} of 3 uploaded (Min 1 Required)
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[0, 1, 2].map((idx) => {
-                    const isRequired = idx < 2; // Slot 1 and Slot 2 are required
+                    const isRequired = idx < 1; // Only Slot 1 is required
                     const imgUrl = (formData.images && formData.images[idx]) || '';
 
                     return (
@@ -1143,7 +1072,7 @@ export const AdminProductsList = ({ onNavigate }) => {
           <button
             onClick={handleOpenAdd}
             className="flex items-center space-x-2 px-5 py-2.5 bg-[#6030ea] hover:bg-[#4b22c2] text-white text-xs font-bold rounded-xl shadow-lg shadow-[#6030ea]/25 transition-all"
-            title="Create a new product by selecting Category and Subcategory"
+            title="Create a new product by selecting a Category"
           >
             <Plus className="w-4 h-4" />
             <span>+ Add Product</span>
@@ -1178,7 +1107,7 @@ export const AdminProductsList = ({ onNavigate }) => {
 
       {/* Filter Toolbar */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-2xs space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {/* Search */}
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -1205,38 +1134,6 @@ export const AdminProductsList = ({ onNavigate }) => {
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Subcategory Filter */}
-          <div>
-            <select
-              value={selectedSubcategoryFilter}
-              onChange={(e) => setSelectedSubcategoryFilter(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6030ea]/20 focus:border-[#6030ea] font-medium text-gray-700"
-            >
-              <option value="ALL">All Subcategories</option>
-              {tableFilterSubcategories.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Brand Filter */}
-          <div>
-            <select
-              value={selectedBrandFilter}
-              onChange={(e) => setSelectedBrandFilter(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6030ea]/20 focus:border-[#6030ea] font-medium text-gray-700"
-            >
-              <option value="ALL">All Brands</option>
-              {brands.map((b) => (
-                <option key={b._id} value={b._id}>
-                  {b.name}
                 </option>
               ))}
             </select>
@@ -1308,8 +1205,7 @@ export const AdminProductsList = ({ onNavigate }) => {
               <thead className="bg-gray-50/80 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="py-3.5 px-4">Product</th>
-                  <th className="py-3.5 px-4">Category & Subcategory</th>
-                  <th className="py-3.5 px-4">Brand</th>
+                  <th className="py-3.5 px-4">Category</th>
                   <th className="py-3.5 px-4">Price / MRP</th>
                   <th className="py-3.5 px-4 text-center">Best Offer Carousel</th>
                   <th className="py-3.5 px-4">Status</th>
@@ -1343,28 +1239,11 @@ export const AdminProductsList = ({ onNavigate }) => {
                         </div>
                       </td>
 
-                      {/* Category & Subcategory */}
+                      {/* Category */}
                       <td className="py-3 px-4">
-                        <div className="space-y-1">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 text-[#6030ea] font-semibold text-[10px] border border-purple-100">
-                            {catName}
-                          </span>
-                          <span className="text-[11px] text-gray-600 block font-medium">
-                            ↳ {subcatName}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Brand */}
-                      <td className="py-3 px-4">
-                        {brandName ? (
-                          <span className="inline-flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-200 text-gray-800 font-semibold text-[11px]">
-                            <Tag className="w-3 h-3 text-[#6030ea]" />
-                            <span>{brandName}</span>
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-gray-400 italic">No Brand (Generic)</span>
-                        )}
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 text-[#6030ea] font-semibold text-[10px] border border-purple-100">
+                          {catName}
+                        </span>
                       </td>
 
                       {/* Price & MRP */}
@@ -1486,13 +1365,6 @@ export const AdminProductsList = ({ onNavigate }) => {
                     )}
                   </div>
 
-                  {brandName && (
-                    <div className="absolute top-3 right-3">
-                      <span className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md text-gray-800 text-[10px] font-bold shadow">
-                        {brandName}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Body */}
@@ -1711,7 +1583,7 @@ export const AdminProductsList = ({ onNavigate }) => {
                 {/* Unit Dropdown - STRICTLY FILTERED TO ALLOWED UNITS */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    Allowed Unit <span className="text-rose-500">*</span>
+                    Unit <span className="text-rose-500">*</span>
                   </label>
                   <select
                     value={variantForm.unitId}

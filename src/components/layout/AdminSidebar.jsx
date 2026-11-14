@@ -73,19 +73,6 @@ export const AdminSidebar = ({ currentRoute, onRouteChange }) => {
             <span>Categories</span>
           </button>
 
-          {/* Subcategories */}
-          <button
-            onClick={() => onRouteChange('subcategories')}
-            className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-medium transition-all ${
-              isActive('subcategories')
-                ? 'bg-white text-[#18308c] font-bold shadow-lg shadow-black/10'
-                : 'text-white/80 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <FolderTree className="w-4 h-4 shrink-0" />
-            <span>Subcategories</span>
-          </button>
-
           {/* Units / Allowed Units */}
           <button
             onClick={() => onRouteChange('units')}
@@ -96,20 +83,7 @@ export const AdminSidebar = ({ currentRoute, onRouteChange }) => {
             }`}
           >
             <Scale className="w-4 h-4 shrink-0" />
-            <span>Allowed Units</span>
-          </button>
-
-          {/* Brands */}
-          <button
-            onClick={() => onRouteChange('brands')}
-            className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-medium transition-all ${
-              isActive('brands')
-                ? 'bg-white text-[#18308c] font-bold shadow-lg shadow-black/10'
-                : 'text-white/80 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <Tag className="w-4 h-4 shrink-0" />
-            <span>Brands</span>
+            <span>Units</span>
           </button>
 
           {/* Products & Catalog */}
